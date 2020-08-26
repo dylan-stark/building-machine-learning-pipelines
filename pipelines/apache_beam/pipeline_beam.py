@@ -35,7 +35,7 @@ def init_beam_pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,
         components=components,
-        enable_cache=False,
+        enable_cache=True,  # False,
         metadata_connection_config=metadata.sqlite_metadata_connection_config(
             metadata_path
         ),
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     components = init_components(
         data_dir,
         module_file,
-        training_steps=50000,
-        eval_steps=10000,
+        training_steps=500,  # 50000,
+        eval_steps=100,  # 10000,
         serving_model_dir=serving_model_dir,
     )
     direct_num_workers = int(os.cpu_count() / 2)

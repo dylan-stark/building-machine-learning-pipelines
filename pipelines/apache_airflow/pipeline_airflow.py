@@ -47,9 +47,9 @@ def init_pipeline(
 components = init_components(
     data_dir,
     module_file,
-    serving_model_dir,
-    training_steps=50000,
-    eval_steps=10000,
+    serving_model_dir=serving_model_dir,
+    training_steps=500,  # 50000,
+    eval_steps=100,  # 10000,
 )
 pipeline = init_pipeline(components, pipeline_root, 0)
 DAG = AirflowDagRunner(AirflowPipelineConfig(airflow_config)).run(pipeline)
