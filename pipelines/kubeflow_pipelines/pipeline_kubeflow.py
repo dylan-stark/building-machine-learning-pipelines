@@ -7,14 +7,16 @@ from typing import Text
 
 import absl
 from kfp import onprem
+from kfp import aws
 from tfx.orchestration import pipeline
 from tfx.orchestration.kubeflow import kubeflow_dag_runner
 
 pipeline_name = "consumer_complaint_pipeline_kubeflow"
 
-persistent_volume_claim = "tfx-pvc"
-persistent_volume = "tfx-pv"
+persistent_volume_claim = "efs-claim"
+persistent_volume = "efs-pv"
 persistent_volume_mount = "/tfx-data"
+# bucket = 's3://cv-siim-isic-melanoma-classification-2020/pipeline-demo/'
 
 # temp yaml file for Kubeflow Pipelines
 output_filename = f"{pipeline_name}.yaml"
@@ -24,10 +26,13 @@ output_dir = os.path.join(
 
 # pipeline inputs
 data_dir = os.path.join(persistent_volume_mount, "data")
+# data_dir = os.path.join(bucket, "data", "/*")
 module_file = os.path.join(persistent_volume_mount, "components", "module.py")
+# module_file = os.path.join(bucket, "components", "module.py")
 
 # pipeline outputs
 output_base = os.path.join(persistent_volume_mount, "output")
+# output_base = os.path.join(bucket, "output")
 serving_model_dir = os.path.join(output_base, pipeline_name)
 
 
@@ -57,7 +62,10 @@ if __name__ == "__main__":
     metadata_config = kubeflow_dag_runner.get_default_kubeflow_metadata_config()
     tfx_image = os.environ.get(
         "KUBEFLOW_TFX_IMAGE",
-        "gcr.io/oreilly-book/ml-pipelines-tfx-custom:0.22.0",
+        # "gcr.io/oreilly-book/ml-pipelines-tfx-custom:0.22.0",
+        # "527798164940.dkr.ecr.us-west-2.amazonaws.com/tensorflow-2.1.0-notebook-cpu:1.1.0",
+        # "tensorflow/tfx:0.22.0",
+        "344971165627.dkr.ecr.us-east-1.amazonaws.com/pipeline-demo:0.3",
     )
 
     from pipelines.base_pipeline import init_components
@@ -81,11 +89,14 @@ if __name__ == "__main__":
             # such as secrets.
             kubeflow_dag_runner.get_default_pipeline_operator_funcs()
             + [
+                aws.use_aws_secret(
+                    "aws-secret", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"
+                ),
                 onprem.mount_pvc(
                     persistent_volume_claim,
                     persistent_volume,
                     persistent_volume_mount,
-                )
+                ),
             ]
         ),
     )
